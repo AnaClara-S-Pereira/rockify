@@ -1,50 +1,66 @@
-# Rockify
+<h1>
+  <img src="public/favicon.svg" alt="Logo do Rockify" height="34" align="top">
+  Rockify
+</h1>
 
-Um site de música para quem gosta de rock, metal, punk e cenas alternativas. Permite pesquisar qualquer banda do mundo e consultar a formação, a discografia e prévias das músicas. A principal funcionalidade é o Livro Negro, que monta automaticamente um dossiê de cada integrante, com infância, biografia, vida pessoal e polêmicas.
+Um site de música para quem gosta de rock, metal, punk e cenas alternativas. Você pesquisa qualquer banda do mundo e vê a formação, a discografia e prévias das músicas. A parte principal é o Livro Negro, que monta o dossiê de cada integrante, com infância, biografia, vida pessoal e polêmicas.
 
-O visual segue a estética de fanzine fotocopiado, em preto, branco e cinza, com adesivos que podem ser arrastados, fotos com efeito xerox e as polêmicas destacadas em vermelho.
+O visual imita um fanzine fotocopiado, em preto, branco e cinza, com adesivos arrastáveis, fotos com efeito xerox, letras recortadas de revista e as polêmicas marcadas em vermelho.
 
-## Sumário
+## O que o site faz
 
-- [Funcionalidades](#funcionalidades)
-- [Como funciona o Livro Negro](#como-funciona-o-livro-negro)
-- [Como rodar](#como-rodar)
-- [Variáveis de ambiente](#variáveis-de-ambiente)
-- [Fontes de dados](#fontes-de-dados)
-- [Estrutura do projeto](#estrutura-do-projeto)
-- [Tecnologias](#tecnologias)
+**Busca.** Procura bandas por nome ou por gênero e esconde resultados repetidos. O botão "Desenterrar" sorteia uma página lá no fundo de um gênero, para achar bandas que quase ninguém conhece.
 
-## Funcionalidades
+**Página da banda.** Mostra foto, história, links oficiais, formação, as músicas mais tocadas com player de 30 segundos e a discografia. Cada disco abre com a lista de faixas e prévias.
 
-| Página | Rota | Descrição |
-| --- | --- | --- |
-| Início | `/` | Título em destaque, adesivos arrastáveis, mural de bandas, fitas cassete por gênero e chamadas para o quiz e o Livro Negro |
-| Buscar | `/buscar` | Busca por nome ou gênero, sem resultados repetidos, e o botão "Desenterrar", que sorteia bandas pouco conhecidas |
-| Banda | `/banda/:id` | Foto, história, links oficiais, formação, músicas mais tocadas com player e discografia com a lista de faixas |
-| Dossiê | `/banda/:id/membro/:id` | Ficha completa de um integrante, aberta em tela cheia |
-| Livro Negro | `/livro-negro` | Pesquisa de qualquer banda ou integrante, com algumas bandas de exemplo no início |
-| Quiz | `/quiz` | 20 perguntas, 13 perfis musicais e recomendações de bandas e músicas |
-| Conta | `/entrar`, `/cadastro` | Login e cadastro |
-| Perfil | `/perfil` | Foto e banner (do computador ou prontos), bio, status, resultado do quiz e bandas favoritas |
-| Atalho | `/b/Nome da Banda` | Localiza a banda pelo nome e redireciona para a página dela |
+**Livro Negro.** Aceita o nome de qualquer banda ou integrante e abre o dossiê dele em formato de livro: ficha, fotos de infância e atuais, curiosidades, polêmicas em vermelho, biografia em capítulos e um arquivo de fotos. Há algumas bandas de exemplo no início da página.
 
-## Como funciona o Livro Negro
+**Quiz.** Vinte perguntas que revelam seu perfil entre 13 tribos musicais, com um patch para o perfil e recomendações de bandas e músicas.
 
-Nenhuma banda é cadastrada à mão. Ao pesquisar, o site monta a formação e, para cada integrante, o dossiê:
+**Perfil.** Cadastro e login, foto e banner enviados do computador (ou opções prontas), bio, o que está tocando na sua cabeça e as bandas favoritas.
 
-- **Formação:** vem do MusicBrainz. Quando ele lista menos de duas pessoas, o site completa com o Wikidata e com a lista de integrantes da Wikipedia.
-- **Infância, biografia e vida pessoal:** vêm da Wikipedia em português e, quando faltam seções, da versão em inglês, traduzida. Dados do Wikidata (pais, irmãos, cônjuge, filhos) e do MusicBrainz completam o que a Wikipedia não tem. Nenhum integrante fica sem essas três seções.
-- **Polêmicas:** são específicas de cada integrante. Reúnem trechos da Wikipedia e manchetes da imprensa que citam a pessoa pelo nome. Em bandas de até duas pessoas, as polêmicas da dupla valem para as duas.
-- **Fotos:** a foto atual vem do Wikidata, da Wikipedia ou do Wikimedia Commons. A foto de infância ou adolescência (até 19 anos) é encontrada comparando a data da foto com a data de nascimento. Com as chaves de busca de imagens configuradas, o site também procura no Google Imagens, aceitando apenas resultados cujo título cita o nome e a banda.
-- **Navegação:** o botão Voltar do dossiê retorna à página de onde a pessoa veio. A pesquisa do Livro Negro fica na URL, então a lista de integrantes continua na tela ao voltar.
+**Player.** Um player fixo no rodapé toca as prévias em qualquer página, com fila, pausa e barra de progresso.
 
-Tudo é exibido em português. O que vem em inglês é traduzido, e se a tradução falhar o trecho é descartado.
+## Como o dossiê é montado
 
-As bandas de exemplo do início do Livro Negro ficam em `src/data/dossies.ts`: Nirvana, Metallica, Black Sabbath, Ramones, The Cure, Sepultura, Iron Maiden e Joy Division. Esse arquivo serve só de vitrine e não é usado para as demais bandas.
+Nenhuma banda é cadastrada à mão. A formação vem do MusicBrainz e, quando ele conhece poucos integrantes, é completada pelo Wikidata e pela lista de integrantes da Wikipedia. Infância, biografia e vida pessoal vêm da Wikipedia em português, com a versão em inglês traduzida para preencher o que faltar. As polêmicas são de cada integrante e juntam trechos da Wikipedia com manchetes da imprensa. Tudo aparece em português.
+
+## Tecnologias
+
+**Interface**
+- React 19, com componentes e hooks
+- TypeScript em modo estrito
+- Tailwind CSS 4, com o tema, as cores e as animações definidos no CSS
+- React Router 7, para as rotas e o histórico de navegação
+- Vite 7, para o servidor de desenvolvimento e o build
+
+Não há bibliotecas de animação, de ícones ou de componentes. Os adesivos, os ícones, os filtros xerox (SVG) e as animações são feitos à mão em SVG e CSS. As fontes são Anton, Permanent Marker, Special Elite, Space Grotesk e UnifrakturCook, carregadas pelo Google Fonts.
+
+**Funções do servidor**
+- Duas funções na pasta `api/`, rodando no Vercel e também no `npm run dev`: uma reúne manchetes e pesquisas sobre a pessoa, a outra busca fotos.
+
+**Armazenamento**
+- O login e o perfil ficam no `localStorage` do navegador, com a senha guardada como hash (SHA-256). As respostas das APIs ficam em cache na sessão.
+
+## APIs usadas
+
+- **MusicBrainz.** Busca de bandas, integrantes, discografia e faixas.
+- **Wikidata.** Datas de nascimento e morte, família, prêmios e fotos principais.
+- **Wikipedia (português e inglês).** Biografia, imagens das páginas e busca de menções.
+- **Wikimedia Commons.** Fotos com data, usadas para achar imagens de infância e juventude.
+- **Cover Art Archive.** Capas dos discos.
+- **Deezer.** Fotos das bandas, capas que faltam e prévias de 30 segundos das músicas.
+- **Google Notícias (RSS).** Manchetes sobre polêmicas, vida pessoal e infância.
+- **Google Tradutor (endpoint público).** Tradução do que vem em inglês.
+- **Serper.dev (opcional).** Busca de fotos no Google Imagens.
+- **Gemini, do Google (opcional).** Pesquisa mais ampla sobre a pessoa, com busca na web.
+- **YouTube.** Os botões de vídeo abrem a busca correspondente.
+
+O MusicBrainz aceita no máximo um pedido por segundo, então o site mantém uma fila por servidor e repete sozinho os pedidos barrados por limite de uso.
 
 ## Como rodar
 
-É necessário Node 20 ou mais recente.
+É preciso ter o Node 20 ou mais novo.
 
 ```bash
 npm install
@@ -58,66 +74,30 @@ npm run build
 npm run preview
 ```
 
-Para publicar, basta enviar o projeto ao Vercel. O arquivo `vercel.json` já trata as rotas e publica as funções da pasta `api/`.
+Para publicar, é só enviar o projeto para o Vercel. O `vercel.json` já cuida das rotas e das funções.
 
-## Variáveis de ambiente
+## Chaves opcionais
 
-O site funciona sem nenhuma variável. As abaixo são opcionais e deixam o Livro Negro mais completo. No Vercel, elas ficam em Settings, Environment Variables. Para rodar localmente, crie um arquivo `.env` na raiz do projeto (o mesmo diretório do `package.json`).
-
-| Variável | Para que serve |
-| --- | --- |
-| `SERPER_API_KEY` | Liga a busca de fotos no Google Imagens por meio do serper.dev, que oferece uma chave gratuita com 2.500 buscas |
-| `GOOGLE_CSE_KEY` e `GOOGLE_CSE_ID` | Alternativa à de cima: a API oficial Programmable Search do Google. Só funciona em projetos que ainda tenham acesso à Custom Search API |
-| `GEMINI_API_KEY` | Liga a pesquisa do Gemini com busca do Google para polêmicas, vida pessoal, infância e biografia. Chave gratuita em aistudio.google.com |
-| `GEMINI_MODEL` | Troca o modelo do Gemini. O padrão é `gemini-2.5-flash` |
-
-Exemplo de `.env`:
+O site funciona sem nenhuma chave. Elas só deixam o Livro Negro mais completo. Crie um arquivo `.env` na mesma pasta do `package.json`:
 
 ```
 SERPER_API_KEY=sua-chave
 GEMINI_API_KEY=sua-chave
 ```
 
-Nunca publique esse arquivo. Ele já está no `.gitignore`.
+`SERPER_API_KEY` liga a busca de fotos de infância e atuais (chave grátis em serper.dev). `GEMINI_API_KEY` liga uma pesquisa mais ampla de polêmicas, vida pessoal e biografia (chave grátis em aistudio.google.com). No Vercel, as mesmas variáveis ficam em Settings, Environment Variables. O `.env` já está no `.gitignore`.
 
-## Fontes de dados
-
-| Fonte | Uso |
-| --- | --- |
-| MusicBrainz | Busca de bandas, integrantes, discografia e faixas |
-| Wikidata e Wikipedia | Fotos, datas, família, biografia e galeria de imagens |
-| Wikimedia Commons | Fotos com data, usadas para achar imagens de juventude |
-| Cover Art Archive e Deezer | Capas dos discos |
-| Deezer | Fotos das bandas e prévias de 30 segundos |
-| Google Notícias (RSS) | Manchetes sobre polêmicas, vida pessoal e infância |
-| Google Imagens (opcional) | Fotos que não existem nas fontes livres |
-| YouTube | Os botões de vídeo abrem a busca correspondente |
-
-Cada servidor tem a própria fila de pedidos e o MusicBrainz recebe no máximo um por segundo. Respostas com limite de uso (429 ou 503) são repetidas automaticamente, e tudo fica em cache durante a sessão.
-
-As funções da pasta `api/` rodam no Vercel e também com `npm run dev`. Em outra hospedagem elas ficam indisponíveis, e o dossiê usa apenas Wikipedia, Wikidata e MusicBrainz.
-
-## Estrutura do projeto
+## Estrutura
 
 ```
-api/                funções do servidor
-  pessoa.ts         manchetes da imprensa e pesquisa do Gemini
-  fotos.ts          busca de fotos no Google Imagens
+api/        funções do servidor (pesquisa sobre a pessoa e busca de fotos)
 src/
-  components/       band, home, layout, profile, quiz e ui (adesivos, foto xerox, letras recortadas)
-  context/          usuário logado e player de música
-  data/             bandas de exemplo, gêneros, quiz e mural
-  hooks/            carregamento assíncrono, dados do dossiê, fotos de bandas
-  lib/              cache e fila de pedidos, utilidades de texto
-  pages/            uma página por rota
-  services/         MusicBrainz, Wikipedia, Wikidata, Deezer, dossiê, formação e autenticação
-  styles/           tema do Tailwind e efeitos visuais
+  components/   peças da interface
+  context/      usuário logado e player
+  data/         bandas de exemplo, gêneros e quiz
+  hooks/        carregamento de dados e montagem do dossiê
+  lib/          cache, fila de pedidos e utilidades
+  pages/        uma página por rota
+  services/     acesso às APIs e login
+  styles/       tema e efeitos visuais
 ```
-
-## Login e cadastro
-
-O login funciona, mas os dados ficam no `localStorage` do navegador e a senha é guardada como hash. Isso atende a um projeto de portfólio. Para contas reais, é possível trocar as funções de `src/services/auth.ts` por Supabase ou Firebase, sem alterar o resto do site.
-
-## Tecnologias
-
-React 19, TypeScript, Tailwind CSS 4, React Router 7 e Vite. Não há bibliotecas de animação ou de ícones: os adesivos, os ícones e as animações são feitos à mão em SVG e CSS.
