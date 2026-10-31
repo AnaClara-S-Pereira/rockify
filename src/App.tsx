@@ -1,40 +1,40 @@
 import { BrowserRouter, Route, Routes } from "react-router";
-import Layout from "./components/layout/Layout";
-import { AuthProvider } from "./context/AuthContext";
-import { PlayerProvider } from "./context/PlayerContext";
-import BandPage from "./pages/BandPage";
-import BlackBookPage from "./pages/BlackBookPage";
-import HomePage from "./pages/HomePage";
-import LoginPage from "./pages/LoginPage";
-import NotFoundPage from "./pages/NotFoundPage";
-import ProfilePage from "./pages/ProfilePage";
-import QuizPage from "./pages/QuizPage";
-import ResolveBandPage from "./pages/ResolveBandPage";
-import SearchPage from "./pages/SearchPage";
-import SignupPage from "./pages/SignupPage";
+import Estrutura from "./componentes/estrutura/Estrutura";
+import { ProvedorUsuario } from "./contexto/ContextoUsuario";
+import { ProvedorPlayer } from "./contexto/ContextoPlayer";
+import PaginaBanda from "./paginas/PaginaBanda";
+import PaginaLivroNegro from "./paginas/PaginaLivroNegro";
+import PaginaInicial from "./paginas/PaginaInicial";
+import PaginaLogin from "./paginas/PaginaLogin";
+import PaginaNaoEncontrada from "./paginas/PaginaNaoEncontrada";
+import PaginaPerfil from "./paginas/PaginaPerfil";
+import PaginaQuiz from "./paginas/PaginaQuiz";
+import PaginaAtalhoBanda from "./paginas/PaginaAtalhoBanda";
+import PaginaBusca from "./paginas/PaginaBusca";
+import PaginaCadastro from "./paginas/PaginaCadastro";
 
 export default function App() {
   return (
-    <AuthProvider>
-      <PlayerProvider>
+    <ProvedorUsuario>
+      <ProvedorPlayer>
         <BrowserRouter>
           <Routes>
-            <Route element={<Layout />}>
-              <Route index element={<HomePage />} />
-              <Route path="buscar" element={<SearchPage />} />
-              <Route path="b/:name" element={<ResolveBandPage />} />
-              <Route path="banda/:mbid" element={<BandPage />} />
-              <Route path="banda/:mbid/membro/:memberId" element={<BandPage />} />
-              <Route path="livro-negro" element={<BlackBookPage />} />
-              <Route path="quiz" element={<QuizPage />} />
-              <Route path="entrar" element={<LoginPage />} />
-              <Route path="cadastro" element={<SignupPage />} />
-              <Route path="perfil" element={<ProfilePage />} />
-              <Route path="*" element={<NotFoundPage />} />
+            <Route element={<Estrutura />}>
+              <Route index element={<PaginaInicial />} />
+              <Route path="buscar" element={<PaginaBusca />} />
+              <Route path="b/:name" element={<PaginaAtalhoBanda />} />
+              <Route path="banda/:mbid" element={<PaginaBanda />} />
+              <Route path="banda/:mbid/membro/:memberId" element={<PaginaBanda />} />
+              <Route path="livro-negro" element={<PaginaLivroNegro />} />
+              <Route path="quiz" element={<PaginaQuiz />} />
+              <Route path="entrar" element={<PaginaLogin />} />
+              <Route path="cadastro" element={<PaginaCadastro />} />
+              <Route path="perfil" element={<PaginaPerfil />} />
+              <Route path="*" element={<PaginaNaoEncontrada />} />
             </Route>
           </Routes>
         </BrowserRouter>
-      </PlayerProvider>
-    </AuthProvider>
+      </ProvedorPlayer>
+    </ProvedorUsuario>
   );
 }

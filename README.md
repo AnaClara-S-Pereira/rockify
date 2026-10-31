@@ -3,64 +3,50 @@
   Rockify
 </h1>
 
-Um site de música para quem gosta de rock, metal, punk e cenas alternativas. Você pesquisa qualquer banda do mundo e vê a formação, a discografia e prévias das músicas. A parte principal é o Livro Negro, que monta o dossiê de cada integrante, com infância, biografia, vida pessoal e polêmicas.
+Um site de música para quem gosta de rock, metal, punk e cenas alternativas. Você pesquisa qualquer banda ou artista do mundo e vê a formação, a discografia e prévias das músicas. A parte principal é o Livro Negro: um dossiê de cada integrante, com infância, biografia, vida pessoal e polêmicas.
 
-O visual imita um fanzine fotocopiado, em preto, branco e cinza, com adesivos arrastáveis, fotos com efeito xerox, letras recortadas de revista e as polêmicas marcadas em vermelho.
+O visual é inspirado em fanzines fotocopiados: fundo preto, letras recortadas de revista, adesivos arrastáveis e as polêmicas marcadas em vermelho. As fotos são coloridas e viram xerox em preto e branco quando o mouse passa por cima.
 
-## O que o site faz
+## Funcionalidades
 
-**Busca.** Procura bandas por nome ou por gênero e esconde resultados repetidos. O botão "Desenterrar" sorteia uma página lá no fundo de um gênero, para achar bandas que quase ninguém conhece.
+**Busca.** Procura bandas e artistas por nome ou por gênero, sem resultados repetidos. Os gêneros de rock ficam à mostra e outros, como MPB, pop, hip hop e samba, ficam atrás de um botão. O botão "Desenterrar" sorteia uma página do fundo de um gênero para você achar nomes que quase ninguém conhece.
 
-**Página da banda.** Mostra foto, história, links oficiais, formação, as músicas mais tocadas com player de 30 segundos e a discografia. Cada disco abre com a lista de faixas e prévias.
+**Página da banda.** Foto, história, links oficiais, formação, músicas mais tocadas com player de 30 segundos e discografia. Cada disco abre com a lista de faixas.
 
-**Livro Negro.** Aceita o nome de qualquer banda ou integrante e abre o dossiê dele em formato de livro: ficha, fotos de infância e atuais, curiosidades, polêmicas em vermelho, biografia em capítulos e um arquivo de fotos. Há algumas bandas de exemplo no início da página.
+**Livro Negro.** Pesquisa qualquer banda ou integrante e abre o dossiê dele em formato de livro, com ficha, fotos de infância e atuais, curiosidades, biografia em capítulos, polêmicas em destaque e um arquivo de fotos. Algumas bandas de exemplo aparecem no início da página.
 
-**Quiz.** Vinte perguntas que revelam seu perfil entre 13 tribos musicais, com um patch para o perfil e recomendações de bandas e músicas.
+**Quiz.** Vinte perguntas que descobrem seu perfil entre 13 tribos musicais, com um selo para o perfil e recomendações de bandas e músicas.
 
-**Perfil.** Cadastro e login, foto e banner enviados do computador (ou opções prontas), bio, o que está tocando na sua cabeça e as bandas favoritas.
+**Perfil.** Cadastro e login, foto e banner enviados do computador, bio, o que está tocando na sua cabeça e suas bandas favoritas.
 
 **Player.** Um player fixo no rodapé toca as prévias em qualquer página, com fila, pausa e barra de progresso.
 
-## Como o dossiê é montado
-
-Nenhuma banda é cadastrada à mão. A formação vem do MusicBrainz e, quando ele conhece poucos integrantes, é completada pelo Wikidata e pela lista de integrantes da Wikipedia. Infância, biografia e vida pessoal vêm da Wikipedia em português, com a versão em inglês traduzida para preencher o que faltar. As polêmicas são de cada integrante e juntam trechos da Wikipedia com manchetes da imprensa. Tudo aparece em português.
-
 ## Tecnologias
 
-**Interface**
-- React 19, com componentes e hooks
-- TypeScript em modo estrito
-- Tailwind CSS 4, com o tema, as cores e as animações definidos no CSS
-- React Router 7, para as rotas e o histórico de navegação
-- Vite 7, para o servidor de desenvolvimento e o build
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- React Router 7
+- Vite 7
+- Funções serverless na pasta `api/`, publicadas no Vercel
 
-Não há bibliotecas de animação, de ícones ou de componentes. Os adesivos, os ícones, os filtros xerox (SVG) e as animações são feitos à mão em SVG e CSS. As fontes são Anton, Permanent Marker, Special Elite, Space Grotesk e UnifrakturCook, carregadas pelo Google Fonts.
+Os adesivos, os ícones, os filtros de efeito xerox e as animações foram desenhados em SVG e CSS. As fontes são Anton, Permanent Marker, Special Elite, Space Grotesk e UnifrakturCook, do Google Fonts.
 
-**Funções do servidor**
-- Duas funções na pasta `api/`, rodando no Vercel e também no `npm run dev`: uma reúne manchetes e pesquisas sobre a pessoa, a outra busca fotos.
+## Fontes de dados
 
-**Armazenamento**
-- O login e o perfil ficam no `localStorage` do navegador, com a senha guardada como hash (SHA-256). As respostas das APIs ficam em cache na sessão.
+O site reúne informações de bases abertas e de serviços públicos:
 
-## APIs usadas
+- **MusicBrainz:** bandas, integrantes, discografia e faixas
+- **Wikidata, Wikipedia e Wikimedia Commons:** dados biográficos e fotos
+- **Cover Art Archive e Deezer:** capas dos discos, fotos das bandas e prévias das músicas
+- **Google Notícias (RSS):** manchetes da imprensa
+- **Serper.dev e Gemini (opcionais):** busca de fotos e pesquisa complementar
 
-- **MusicBrainz.** Busca de bandas, integrantes, discografia e faixas.
-- **Wikidata.** Datas de nascimento e morte, família, prêmios e fotos principais.
-- **Wikipedia (português e inglês).** Biografia, imagens das páginas e busca de menções.
-- **Wikimedia Commons.** Fotos com data, usadas para achar imagens de infância e juventude.
-- **Cover Art Archive.** Capas dos discos.
-- **Deezer.** Fotos das bandas, capas que faltam e prévias de 30 segundos das músicas.
-- **Google Notícias (RSS).** Manchetes sobre polêmicas, vida pessoal e infância.
-- **Google Tradutor (endpoint público).** Tradução do que vem em inglês.
-- **Serper.dev (opcional).** Busca de fotos no Google Imagens.
-- **Gemini, do Google (opcional).** Pesquisa mais ampla sobre a pessoa, com busca na web.
-- **YouTube.** Os botões de vídeo abrem a busca correspondente.
-
-O MusicBrainz aceita no máximo um pedido por segundo, então o site mantém uma fila por servidor e repete sozinho os pedidos barrados por limite de uso.
+As informações do dossiê vêm dessas fontes e podem conter erros ou lacunas. Polêmicas citadas são acusações ou notícias publicadas, não fatos comprovados.
 
 ## Como rodar
 
-É preciso ter o Node 20 ou mais novo.
+É preciso ter o Node 20 ou mais recente.
 
 ```bash
 npm install
@@ -74,30 +60,34 @@ npm run build
 npm run preview
 ```
 
-Para publicar, é só enviar o projeto para o Vercel. O `vercel.json` já cuida das rotas e das funções.
+Para publicar, basta enviar o projeto ao Vercel. O arquivo `vercel.json` já cuida das rotas e das funções.
 
 ## Chaves opcionais
 
-O site funciona sem nenhuma chave. Elas só deixam o Livro Negro mais completo. Crie um arquivo `.env` na mesma pasta do `package.json`:
+O site funciona sem nenhuma chave. Elas só ampliam o Livro Negro. Para usá-las, crie um arquivo `.env` na mesma pasta do `package.json`:
 
 ```
 SERPER_API_KEY=sua-chave
 GEMINI_API_KEY=sua-chave
 ```
 
-`SERPER_API_KEY` liga a busca de fotos de infância e atuais (chave grátis em serper.dev). `GEMINI_API_KEY` liga uma pesquisa mais ampla de polêmicas, vida pessoal e biografia (chave grátis em aistudio.google.com). No Vercel, as mesmas variáveis ficam em Settings, Environment Variables. O `.env` já está no `.gitignore`.
+- `SERPER_API_KEY` liga a busca de fotos no Google Imagens (chave gratuita em serper.dev).
+- `GEMINI_API_KEY` liga uma pesquisa mais ampla sobre cada pessoa (chave gratuita em aistudio.google.com).
 
-## Estrutura
+No Vercel, as mesmas variáveis ficam em Settings, Environment Variables. O `.env` já está no `.gitignore` e nunca deve ser publicado.
+
+## Estrutura do projeto
 
 ```
-api/        funções do servidor (pesquisa sobre a pessoa e busca de fotos)
+api/            funções do servidor
 src/
-  components/   peças da interface
-  context/      usuário logado e player
-  data/         bandas de exemplo, gêneros e quiz
+  componentes/  peças da interface (banda, inicio, estrutura, perfil, quiz e interface)
+  contexto/     usuário logado e player
+  dados/        bandas de exemplo, gêneros e perguntas do quiz
+  estilos/      tema e efeitos visuais
   hooks/        carregamento de dados e montagem do dossiê
-  lib/          cache, fila de pedidos e utilidades
-  pages/        uma página por rota
-  services/     acesso às APIs e login
-  styles/       tema e efeitos visuais
+  paginas/      uma página por rota
+  servicos/     acesso às fontes de dados e login
+  tipos/        tipos do TypeScript
+  utilitarios/  funções de apoio
 ```
