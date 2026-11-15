@@ -91,3 +91,7 @@ src/
   tipos/        tipos do TypeScript
   utilitarios/  funções de apoio
 ```
+
+## Autora
+
+Feito por Ana Clara ([GitHub](https://github.com/AnaClara-S-Pereira) · [LinkedIn](https://www.linkedin.com/in/ana-pereira-dev/)).

@@ -26,6 +26,16 @@ export default function Rodape() {
         <div className="font-type text-sm leading-relaxed">
           <p className="font-marker text-lg">Dados vindos de:</p>
           <p>MusicBrainz (bandas, integrantes, discos), Wikipedia e Wikidata (biografias e fotos), Cover Art Archive (capas) e Deezer (prévias de 30s).</p>
+          <p className="mt-3">
+            Feito por{" "}
+            <a href="https://github.com/AnaClara-S-Pereira" target="_blank" rel="noreferrer" className="underline">
+              Ana Clara
+            </a>
+            {" · "}
+            <a href="https://www.linkedin.com/in/ana-pereira-dev/" target="_blank" rel="noreferrer" className="underline">
+              LinkedIn
+            </a>
+          </p>
           <p className="mt-3 text-ash"> Rockify 2026 © Todos os direitos reservados.</p>
         </div>
       </div>
