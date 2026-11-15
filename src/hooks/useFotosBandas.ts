@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { findDeezerArtist } from "../servicos/deezer";
 import { getWikiPeople } from "../servicos/wikidata";
-
-const MBID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+import { isMbid } from "../utilitarios/utilidades";
 
 // FOTOS DE BANDAS: DEEZER E, SE FALTAR, WIKIDATA
 export function useFotosBandas(artists: (string | { id: string; name: string })[]) {
@@ -19,7 +18,7 @@ export function useFotosBandas(artists: (string | { id: string; name: string })[
       while (queue.length && alive) {
         const artist = queue.shift()!;
         const hit = await findDeezerArtist(artist.name);
-        if (!hit && MBID.test(artist.id)) missing.push(artist.id);
+        if (!hit && isMbid(artist.id)) missing.push(artist.id);
         if (alive) setPictures((p) => ({ ...p, [artist.id]: hit?.picture ?? null }));
       }
     };

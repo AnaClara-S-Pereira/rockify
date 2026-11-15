@@ -1,6 +1,6 @@
 import { normalize } from "../utilitarios/utilidades";
 import type { Artist, Member, WikiPerson } from "../tipos";
-import { findWikiPage, getWikiMembers } from "./wikipedia";
+import { findWikiPage, findWikiPages, getWikiMembers, pagesFrom } from "./wikipedia";
 import { getWikidataLineup, getWikiTitles } from "./wikidata";
 
 // FORMAÇÃO DA BANDA: O MUSICBRAINZ MANDA; SE ELE LISTA MENOS DE 2 PESSOAS, COMPLETA COM O WIKIDATA E COM A LISTA DE INTEGRANTES DA WIKIPEDIA
@@ -15,11 +15,8 @@ export async function getLineup(artist: Artist): Promise<Member[]> {
   if (fromWikidata.length > 0) return [...artist.members, ...fromWikidata];
 
   const titles = await getWikiTitles(artist.wikidataId ?? artist.id).catch(() => undefined);
-  const pages = [titles?.pt && { lang: "pt" as const, title: titles.pt }, titles?.en && { lang: "en" as const, title: titles.en }].filter((p) => !!p);
-  if (pages.length === 0) {
-    const found = await Promise.all([findWikiPage(artist.name, artist.tags[0] ?? "rock", ["pt"]), findWikiPage(artist.name, artist.tags[0] ?? "rock", ["en"])]);
-    pages.push(...found.filter((p) => !!p));
-  }
+  let pages = pagesFrom(titles);
+  if (pages.length === 0) pages = await findWikiPages(artist.name, artist.tags[0] ?? "rock");
   for (const { lang, title } of pages) {
     const fromWiki = fresh(await getWikiMembers(lang, title));
     if (fromWiki.length > 0) return [...artist.members, ...fromWiki];

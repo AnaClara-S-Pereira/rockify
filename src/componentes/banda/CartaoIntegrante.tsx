@@ -5,12 +5,11 @@ import FotoXerox from "../interface/FotoXerox";
 interface Props {
   member: Member;
   person?: WikiPerson;
-  hasDossier: boolean;
   onOpen: () => void;
 }
 
 // CARD DE INTEGRANTE NA FORMAÇÃO
-export default function CartaoIntegrante({ member, person, hasDossier, onOpen }: Props) {
+export default function CartaoIntegrante({ member, person, onOpen }: Props) {
   const rot = tilt(member.id, 3);
   return (
     <button
@@ -26,11 +25,9 @@ export default function CartaoIntegrante({ member, person, hasDossier, onOpen }:
         {member.original && (
           <span className="absolute bottom-2 left-2 bg-ink px-2 py-0.5 font-type text-xs text-bone">fundador</span>
         )}
-        {hasDossier && (
-          <span className="absolute left-2 top-2 flex items-center gap-1 bg-ink px-2 py-0.5 font-marker text-xs text-bone">
-            <span className="h-2 w-2 animate-flicker rounded-full bg-blood" /> tem fofoca
-          </span>
-        )}
+        <span className="absolute left-2 top-2 flex items-center gap-1 bg-ink px-2 py-0.5 font-marker text-xs text-bone">
+          <span className="h-2 w-2 animate-flicker rounded-full bg-blood" /> tem fofoca
+        </span>
       </div>
       <p className="mt-3 font-marker text-xl leading-tight">{member.name}</p>
       <p className="mt-1 line-clamp-1 font-type text-xs text-ash">{member.instruments.join(", ") || "integrante"}</p>

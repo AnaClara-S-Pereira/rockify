@@ -57,6 +57,8 @@ export function onlyNew(list: string[], known: string[]): string[] {
   return list.filter((t) => !seen.some((k) => overlaps(wordsOf(t), k)));
 }
 
+export const semVazios = (list: (string | null | undefined)[]) => list.filter((t): t is string => !!t);
+
 export function listPt(items: string[]): string {
   return items.length < 2 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} e ${items[items.length - 1]}`;
 }

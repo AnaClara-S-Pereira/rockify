@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import * as auth from "../servicos/autenticacao";
 import type { FavoriteBand, Profile, User } from "../tipos";
 
@@ -18,37 +18,31 @@ const AuthContext = createContext<AuthValue | null>(null);
 export function ProvedorUsuario({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => auth.currentUser());
 
-  const login = useCallback(async (identifier: string, password: string) => {
+  async function login(identifier: string, password: string) {
     setUser(await auth.login(identifier, password));
-  }, []);
+  }
 
-  const signup = useCallback(async (data: { name: string; username: string; email: string; password: string }) => {
+  async function signup(data: { name: string; username: string; email: string; password: string }) {
     setUser(await auth.signup(data));
-  }, []);
+  }
 
-  const logout = useCallback(() => {
+  function logout() {
     auth.logout();
     setUser(null);
-  }, []);
+  }
 
-  const updateProfile = useCallback(
-    (patch: Partial<Profile>) => {
-      if (user) setUser(auth.saveProfile(user.id, patch));
-    },
-    [user],
-  );
+  function updateProfile(patch: Partial<Profile>) {
+    if (user) setUser(auth.saveProfile(user.id, patch));
+  }
 
-  const toggleFavorite = useCallback(
-    (band: FavoriteBand) => {
-      if (!user) return;
-      const list = user.profile.favorites;
-      const next = list.some((b) => b.id === band.id) ? list.filter((b) => b.id !== band.id) : [band, ...list];
-      setUser(auth.saveProfile(user.id, { favorites: next }));
-    },
-    [user],
-  );
+  function toggleFavorite(band: FavoriteBand) {
+    if (!user) return;
+    const list = user.profile.favorites;
+    const next = list.some((b) => b.id === band.id) ? list.filter((b) => b.id !== band.id) : [band, ...list];
+    setUser(auth.saveProfile(user.id, { favorites: next }));
+  }
 
-  const isFavorite = useCallback((id: string) => !!user?.profile.favorites.some((b) => b.id === id), [user]);
+  const isFavorite = (id: string) => !!user?.profile.favorites.some((b) => b.id === id);
 
   return (
     <AuthContext.Provider value={{ user, login, signup, logout, updateProfile, toggleFavorite, isFavorite }}>

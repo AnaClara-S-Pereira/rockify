@@ -57,9 +57,7 @@ export async function findTrack(artist: string, title: string): Promise<Playable
       const hits = (data.data ?? []).filter((t) => t.preview && normalize(t.artist.name).includes(wantArtist));
       const hit = hits.find((t) => normalize(t.title) === wantTitle) ?? hits.find((t) => normalize(t.title).startsWith(wantTitle)) ?? hits[0];
       if (hit) return toPlayable(hit);
-    } catch {
-      continue;
-    }
+    } catch {}
   }
   return null;
 }
@@ -74,9 +72,7 @@ export async function findAlbumCover(artist: string, title: string): Promise<str
       const hits = (data.data ?? []).filter((a) => normalize(a.artist.name).includes(wantArtist));
       const hit = hits.find((a) => normalize(a.title) === wantTitle) ?? hits.find((a) => normalize(a.title).startsWith(wantTitle));
       if (hit && !hit.cover_big.includes("/album//")) return hit.cover_big;
-    } catch {
-      continue;
-    }
+    } catch {}
   }
   return undefined;
 }

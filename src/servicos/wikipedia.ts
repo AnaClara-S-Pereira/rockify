@@ -1,4 +1,4 @@
-import { throttledJson as getJson } from "../utilitarios/requisicoes";
+import { throttledJson } from "../utilitarios/requisicoes";
 import { lastName, plain, sentences, yearFrom } from "../utilitarios/texto";
 import { normalize } from "../utilitarios/utilidades";
 import type { Member, WikiImage, WikiSection } from "../tipos";
@@ -17,7 +17,7 @@ export function wikiApi(lang: string, params: Record<string, string>) {
 
 export async function pageImages(lang: string, titles: string[]): Promise<Record<string, string>> {
   if (titles.length === 0) return {};
-  const data = await getJson<{ query?: { pages: { title: string; thumbnail?: { source: string } }[]; normalized?: { from: string; to: string }[] } }>(
+  const data = await throttledJson<{ query?: { pages: { title: string; thumbnail?: { source: string } }[]; normalized?: { from: string; to: string }[] } }>(
     wikiApi(lang, { action: "query", prop: "pageimages", piprop: "thumbnail", pithumbsize: "600", redirects: "1", titles: titles.join("|") }),
   );
   const found: Record<string, string> = {};
@@ -38,7 +38,7 @@ export async function findWikiPage(names: string | string[], context: string, la
     const target = normalize(name);
     for (const lang of langs) {
       try {
-        const data = await getJson<{ query?: { pages: { title: string; index: number; extract?: string; thumbnail?: { source: string } }[] } }>(
+        const data = await throttledJson<{ query?: { pages: { title: string; index: number; extract?: string; thumbnail?: { source: string } }[] } }>(
           wikiApi(lang, {
             action: "query",
             generator: "search",
@@ -56,12 +56,24 @@ export async function findWikiPage(names: string | string[], context: string, la
           .sort((a, b) => a.index - b.index)
           .find((p) => normalize(p.title).startsWith(target) && (!band || mentionsBand(p.extract ?? "", band)));
         if (hit) return { lang, title: hit.title, image: hit.thumbnail?.source };
-      } catch {
-        continue;
-      }
+      } catch {}
     }
   }
   return undefined;
+}
+
+// AS PÁGINAS DO WIKIDATA (PORTUGUÊS E INGLÊS), QUANDO EXISTEM
+export function pagesFrom(titles?: { pt?: string; en?: string }): WikiPage[] {
+  const pages: WikiPage[] = [];
+  if (titles?.pt) pages.push({ lang: "pt", title: titles.pt });
+  if (titles?.en) pages.push({ lang: "en", title: titles.en });
+  return pages;
+}
+
+// PROCURA PELO NOME A PÁGINA EM PORTUGUÊS E A EM INGLÊS
+export async function findWikiPages(names: string | string[], context: string, band?: string): Promise<WikiPage[]> {
+  const found = await Promise.all([findWikiPage(names, context, ["pt"], band), findWikiPage(names, context, ["en"], band)]);
+  return found.filter((p): p is WikiPage => !!p);
 }
 
 const SKIP_SECTIONS = /discografia|discography|refer[eê]ncias|references|liga[cç][oõ]es externas|external links|ver tamb[eé]m|see also|notas|notes|bibliografia|bibliography|filmografia|filmography|leitura adicional|further reading|equipamento|equipment|pr[eê]mios?|awards?|turn[eê]s|tours|videografia/i;
@@ -73,7 +85,7 @@ const WANTED_SUBSECTIONS = /vida pessoal|personal life|inf[aâ]ncia|juventude|ea
 async function getWikiRaw(lang: string, title: string, introOnly = false): Promise<WikiSection[]> {
   const params: Record<string, string> = { action: "query", prop: "extracts", explaintext: "1", exsectionformat: "wiki", redirects: "1", titles: title };
   if (introOnly) params.exintro = "1";
-  const data = await getJson<{ query: { pages: { extract?: string }[] } }>(wikiApi(lang, params));
+  const data = await throttledJson<{ query: { pages: { extract?: string }[] } }>(wikiApi(lang, params));
   const text = data.query.pages[0]?.extract ?? "";
 
   const sections: WikiSection[] = [{ title: "Introdução", paragraphs: [] }];
@@ -160,7 +172,7 @@ export function isPortrait(img: WikiImage): boolean {
 
 export async function getWikiImages(lang: string, title: string): Promise<WikiImage[]> {
   const url = `https://${lang}.wikipedia.org/api/rest_v1/page/media-list/${encodeURIComponent(title.replace(/ /g, "_"))}`;
-  const data = await getJson<{ items: { type: string; title: string; caption?: { text: string }; srcset?: { src: string }[] }[] }>(url);
+  const data = await throttledJson<{ items: { type: string; title: string; caption?: { text: string }; srcset?: { src: string }[] }[] }>(url);
   return data.items
     .filter((i) => i.type === "image" && i.srcset?.length && !NOT_PHOTO.test(i.title))
     .map((i): WikiImage => {
@@ -177,7 +189,7 @@ type CommonsPage = { title: string; index?: number; imageinfo?: { thumburl?: str
 
 async function commons<T>(params: Record<string, string>): Promise<T | undefined> {
   const query = new URLSearchParams({ action: "query", format: "json", origin: "*", ...params });
-  return getJson<T>(`https://commons.wikimedia.org/w/api.php?${query}`).catch(() => undefined);
+  return throttledJson<T>(`https://commons.wikimedia.org/w/api.php?${query}`).catch(() => undefined);
 }
 
 const FILE_INFO = { prop: "imageinfo", iiprop: "url|extmetadata", iiextmetadatafilter: "DateTimeOriginal|DateTime|ImageDescription", iiurlwidth: "600" };
@@ -198,10 +210,12 @@ export async function getCommonsPhotos(name: string, band: string, category?: st
   const cat = category ?? (single ? undefined : name);
 
   const subcats = cat ? await periodCategories(cat) : [];
-  const searches = await Promise.all([
-    commonsFiles({ generator: "search", gsrnamespace: "6", gsrlimit: "40", gsrsearch: `${who} filetype:bitmap` }),
-    commonsFiles({ generator: "search", gsrnamespace: "6", gsrlimit: "40", gsrsearch: `${who} (child OR childhood OR boy OR teenager OR school OR kid OR young OR 1960 OR 1970 OR 1975 OR 1980 OR 1985 OR 1990) filetype:bitmap` }),
-  ]);
+  const childTerms = "(child OR childhood OR boy OR teenager OR school OR kid OR young OR 1960 OR 1970 OR 1975 OR 1980 OR 1985 OR 1990)";
+  const searches = await Promise.all(
+    [`${who} filetype:bitmap`, `${who} ${childTerms} filetype:bitmap`].map((search) =>
+      commonsFiles({ generator: "search", gsrnamespace: "6", gsrlimit: "40", gsrsearch: search }),
+    ),
+  );
   const categories = await Promise.all([
     ...(cat ? [commonsFiles({ generator: "categorymembers", gcmtitle: `Category:${cat}`, gcmtype: "file", gcmlimit: "60" })] : []),
     ...subcats.map((sub) => commonsFiles({ generator: "categorymembers", gcmtitle: sub, gcmtype: "file", gcmlimit: "30" })),

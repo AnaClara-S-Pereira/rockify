@@ -15,7 +15,7 @@ import { findDeezerArtist, getTopTracks } from "../servicos/deezer";
 import { getIntroPt } from "../servicos/dossie";
 import { addMissingPhotos, getLineup } from "../servicos/formacao";
 import { getAlbums, getArtist } from "../servicos/musicbrainz";
-import { findWikiPage, type WikiPage } from "../servicos/wikipedia";
+import { findWikiPages, pagesFrom, type WikiPage } from "../servicos/wikipedia";
 import { getWikiPeople } from "../servicos/wikidata";
 import type { Album, Member, WikiPerson } from "../tipos";
 
@@ -59,13 +59,8 @@ export default function PaginaBanda() {
   // PÁGINAS DA BANDA NA WIKIPEDIA (PORTUGUÊS E INGLÊS): AS DO WIKIDATA OU, SEM ELAS, A BUSCA PELO NOME
   const bandPagesQ = useAssincrono(async (): Promise<WikiPage[]> => {
     if (!artist || peopleQ.loading || lineupQ.loading) return [];
-    const titles = people[artist.id]?.titles;
-    if (titles?.pt || titles?.en) {
-      return [titles.pt && { lang: "pt" as const, title: titles.pt }, titles.en && { lang: "en" as const, title: titles.en }].filter((p): p is WikiPage => !!p);
-    }
-    const context = artist.tags[0] ?? "rock";
-    const found = await Promise.all([findWikiPage(artist.name, context, ["pt"]), findWikiPage(artist.name, context, ["en"])]);
-    return found.filter((p): p is WikiPage => !!p);
+    const pages = pagesFrom(people[artist.id]?.titles);
+    return pages.length > 0 ? pages : findWikiPages(artist.name, artist.tags[0] ?? "rock");
   }, [artist?.id, peopleQ.loading, lineupQ.loading]);
   const bandPages = bandPagesQ.data ?? [];
   const bioQ = useAssincrono(() => (bandPages[0] ? getIntroPt(bandPages[0]) : Promise.resolve([] as string[])), [bandPages[0]?.title, bandPages[0]?.lang]);
@@ -159,7 +154,6 @@ export default function PaginaBanda() {
               key={m.id}
               member={m}
               person={people[m.id]}
-              hasDossier={true}
               onOpen={() => navigate(`/banda/${mbid}/membro/${m.id}`)}
             />
           ))}

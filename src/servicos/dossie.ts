@@ -1,4 +1,4 @@
-import { dropSimilar, lastName, listPt, onlyNew, sentences, yearFrom } from "../utilitarios/texto";
+import { dropSimilar, lastName, listPt, onlyNew, semVazios, sentences, yearFrom } from "../utilitarios/texto";
 import { formatDate, normalize } from "../utilitarios/utilidades";
 import type { Artist, Member, DossieIntegrante, PersonFacts, PressItems, WikiPerson, WikiSection } from "../tipos";
 import { isEnglish, toPortuguese } from "./traducao";
@@ -49,8 +49,20 @@ const kindOf = (title: string) => KINDS.find(([re]) => re.test(title))?.[1];
 
 async function toPtSection(sec: WikiSection): Promise<WikiSection> {
   const title = PT_TITLES[sec.title.toLowerCase()] ?? (await toPortuguese(sec.title)) ?? sec.title;
-  const paragraphs = await Promise.all(sec.paragraphs.slice(0, 4).map((p) => toPortuguese(p)));
-  return { title, paragraphs: paragraphs.filter((p): p is string => !!p) };
+  const paragraphs = await Promise.all(sec.paragraphs.slice(0, 4).map(toPortuguese));
+  return { title, paragraphs: semVazios(paragraphs) };
+}
+
+// SÓ TRADUZ O QUE ESTÁ EM INGLÊS
+const inPt = (text: string, lang: string) => (lang === "en" || isEnglish(text) ? toPortuguese(text) : Promise.resolve(text));
+
+// SEÇÕES DE CADA PÁGINA, JÁ COM O IDIOMA DELA
+async function sectionsOf(pages: WikiPage[]) {
+  const all: (WikiSection & { lang: string })[] = [];
+  for (const { lang, title } of pages) {
+    for (const sec of await getWikiSections(lang, title).catch(() => [])) all.push({ ...sec, lang });
+  }
+  return all;
 }
 
 // SEÇÕES DAS DUAS PÁGINAS SEM REPETIR; O QUE SÓ EXISTE EM INGLÊS É TRADUZIDO E SÓ ENTRA SE NÃO CONTAR O QUE A PÁGINA EM PORTUGUÊS JÁ CONTA
@@ -106,6 +118,11 @@ export function profileOf({ person, artist, facts, member, band }: PersonContext
   };
 }
 
+const bornLine = (p: ReturnType<typeof profileOf>) =>
+  p.birth || p.birthPlace ? `Nasceu${p.birth ? ` em ${formatDate(p.birth)}` : ""}${p.birthPlace ? `, em ${p.birthPlace}` : ""}.` : "";
+
+const fewKnown = (name: string, topic: string) => `Pouco se sabe publicamente sobre ${topic} de ${name}.`;
+
 const bandPhrase = ({ member, band, solo }: PersonContext) => {
   const periods = member.periods.join(", ");
   const instruments = member.instruments.join(", ");
@@ -116,11 +133,10 @@ const bandPhrase = ({ member, band, solo }: PersonContext) => {
 function factsBiography(ctx: PersonContext): string[] {
   const p = profileOf(ctx);
   const f = ctx.facts;
-  const born = p.birth || p.birthPlace ? `Nasceu${p.birth ? ` em ${formatDate(p.birth)}` : ""}${p.birthPlace ? `, em ${p.birthPlace}` : ""}.` : "";
   const died = p.death ? `Morreu em ${formatDate(p.death)}${p.deathPlace ? `, em ${p.deathPlace}` : ""}${p.deathCause ? `, de ${p.deathCause}` : ""}.` : "";
   const jobs = (f?.occupations ?? []).filter((o) => !/^(m[uú]sic|musician)/i.test(o));
   return [
-    [born, bandPhrase(ctx), p.otherBands.length ? `Também passou por ${listPt(p.otherBands.slice(0, 5))}.` : "", jobs.length ? `Atua também como ${listPt(jobs.slice(0, 4))}.` : ""]
+    [bornLine(p), bandPhrase(ctx), p.otherBands.length ? `Também passou por ${listPt(p.otherBands.slice(0, 5))}.` : "", jobs.length ? `Atua também como ${listPt(jobs.slice(0, 4))}.` : ""]
       .filter(Boolean)
       .join(" "),
     f?.awards.length ? `Reconhecimentos: ${listPt(f.awards.slice(0, 4))}.` : "",
@@ -168,7 +184,7 @@ function childhoodParagraphs(ctx: PersonContext, sections: WikiSection[]): strin
   const f = ctx.facts;
   const p = profileOf(ctx);
   const lines = [
-    p.birth || p.birthPlace ? `Nasceu${p.birth ? ` em ${formatDate(p.birth)}` : ""}${p.birthPlace ? `, em ${p.birthPlace}` : ""}.` : "",
+    bornLine(p),
     f?.parents.length ? `Pais: ${listPt(f.parents)}.` : "",
     f?.siblings.length ? `Irmãos: ${listPt(f.siblings)}.` : "",
     f?.education.length ? `Estudou em ${listPt(f.education)}.` : "",
@@ -199,12 +215,12 @@ export function completeBiography(wiki: WikiSection[], ctx: PersonContext): Wiki
 
   if (!has(/inf[aâ]ncia|juventude|origens|early/i)) {
     const paragraphs = childhoodParagraphs(ctx, wiki);
-    out.push({ title: "Infância e Juventude", paragraphs: paragraphs.length ? paragraphs : [`Pouco se sabe publicamente sobre a infância de ${ctx.name}.`] });
+    out.push({ title: "Infância e Juventude", paragraphs: paragraphs.length ? paragraphs : [fewKnown(ctx.name, "a infância")] });
   }
   if (!has(/biografia|carreira|vida e carreira|hist[oó]ria/i)) out.push({ title: "Biografia", paragraphs: factsBiography(ctx) });
   if (!has(/pessoal|fam[ií]lia|relacionament/i)) {
     const paragraphs = personalParagraphs(ctx, wiki);
-    out.push({ title: "Vida Pessoal", paragraphs: paragraphs.length ? paragraphs : [`Pouco se sabe publicamente sobre a vida pessoal de ${ctx.name}.`] });
+    out.push({ title: "Vida Pessoal", paragraphs: paragraphs.length ? paragraphs : [fewKnown(ctx.name, "a vida pessoal")] });
   }
 
   const rank = (s: WikiSection) => RANK.find(([re]) => re.test(s.title))?.[1] ?? 4;
@@ -215,7 +231,7 @@ export function childhoodItems(ctx: PersonContext, sections: WikiSection[], doss
   const own = dossier?.infancia ?? [];
   const found = childhoodParagraphs(ctx, sections);
   const items = dropSimilar([...own, ...found], (t) => t).slice(0, 7);
-  return items.length ? items : [`Pouco se sabe publicamente sobre a infância de ${ctx.name}.`];
+  return items.length ? items : [fewKnown(ctx.name, "a infância")];
 }
 
 export function curiosityItems(ctx: PersonContext, dossier?: DossieIntegrante): string[] {
@@ -251,24 +267,20 @@ export async function getControversies(opts: { name: string; bandName: string; p
   const strong: Claim[] = [];
   const weak: Claim[] = [];
 
-  for (const { lang, title } of pages) {
-    for (const sec of await getWikiSections(lang, title).catch(() => [])) {
-      const dedicated = CONTROVERSY_TITLE.test(sec.title);
-      for (const para of sec.paragraphs) {
-        const list = sentences(para);
-        if (dedicated) strong.push(...tag(list.filter((t) => CONTROVERSY_WORDS.test(t) || DEPARTURE.test(t) || list.length <= 3), lang));
-        else weak.push(...tag(list.filter((t) => CONTROVERSY_WORDS.test(t) && (mentionsHim(t) || ABOUT_HIM.test(t))), lang));
-      }
+  for (const { lang, title: sectionTitle, paragraphs } of await sectionsOf(pages)) {
+    const dedicated = CONTROVERSY_TITLE.test(sectionTitle);
+    for (const para of paragraphs) {
+      const list = sentences(para);
+      if (dedicated) strong.push(...tag(list.filter((t) => CONTROVERSY_WORDS.test(t) || DEPARTURE.test(t) || list.length <= 3), lang));
+      else weak.push(...tag(list.filter((t) => CONTROVERSY_WORDS.test(t) && (mentionsHim(t) || ABOUT_HIM.test(t))), lang));
     }
   }
 
   // PÁGINAS DA BANDA: SÓ FRASES QUE CITAM O INTEGRANTE, NUNCA AS POLÊMICAS DA BANDA INTEIRA
   const aboutHim: Claim[] = [];
-  for (const { lang, title } of bands) {
-    for (const sec of await getWikiSections(lang, title).catch(() => [])) {
-      for (const text of sec.paragraphs.flatMap((para) => sentences(para))) {
-        if (mentionsHim(text) && (CONTROVERSY_WORDS.test(text) || DEPARTURE.test(text))) aboutHim.push({ text, lang });
-      }
+  for (const { lang, paragraphs } of await sectionsOf(bands)) {
+    for (const text of paragraphs.flatMap((para) => sentences(para))) {
+      if (mentionsHim(text) && (CONTROVERSY_WORDS.test(text) || DEPARTURE.test(text))) aboutHim.push({ text, lang });
     }
   }
 
@@ -278,29 +290,25 @@ export async function getControversies(opts: { name: string; bandName: string; p
     .filter(({ text }) => /^[A-ZÀ-Ú"“]/.test(text) && !/^["“].*["”]\.?$/.test(text))
     .slice(0, max + 6);
 
-  const final = await Promise.all(candidates.map(({ text, lang }) => (lang === "en" || isEnglish(text) ? toPortuguese(text) : Promise.resolve(text))));
-  return dropSimilar(final.filter((t): t is string => !!t), (t) => t).slice(0, max);
+  const final = await Promise.all(candidates.map(({ text, lang }) => inPt(text, lang)));
+  return dropSimilar(semVazios(final), (t) => t).slice(0, max);
 }
-
 
 export async function getIntroPt(page: WikiPage): Promise<string[]> {
   const sections = await getWikiSections(page.lang, page.title, true).catch(() => []);
   const paragraphs = (sections[0]?.paragraphs ?? []).slice(0, 5);
   if (page.lang === "pt") return paragraphs;
-  return (await Promise.all(paragraphs.map((p) => toPortuguese(p)))).filter((p): p is string => !!p);
+  return semVazios(await Promise.all(paragraphs.map(toPortuguese)));
 }
 
 export async function getBandMentions(name: string, bands: WikiPage[]): Promise<string[]> {
   const full = normalize(name);
   const claims: Claim[] = [];
-  for (const { lang, title } of bands) {
-    for (const sec of await getWikiSections(lang, title).catch(() => [])) {
-      for (const para of sec.paragraphs) {
-        for (const text of sentences(para, 30)) if (normalize(text).includes(full)) claims.push({ text, lang });
-      }
+  for (const { lang, paragraphs } of await sectionsOf(bands)) {
+    for (const text of paragraphs.flatMap((para) => sentences(para, 30))) {
+      if (normalize(text).includes(full)) claims.push({ text, lang });
     }
   }
   const picked = dropSimilar(claims, (c) => c.text).slice(0, 8);
-  const done = await Promise.all(picked.map(({ text, lang }) => (lang === "en" || isEnglish(text) ? toPortuguese(text) : Promise.resolve(text))));
-  return done.filter((t): t is string => !!t);
+  return semVazios(await Promise.all(picked.map(({ text, lang }) => inPt(text, lang))));
 }

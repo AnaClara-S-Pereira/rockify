@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type PointerEvent } from "react";
+import { useRef, useState, type PointerEvent } from "react";
 
 // ARRASTAR UM ELEMENTO COM MOUSE OU DEDO
 export function useArrastar() {
@@ -7,35 +7,29 @@ export function useArrastar() {
   const start = useRef({ x: 0, y: 0, ox: 0, oy: 0 });
   const moved = useRef(false);
 
-  const onPointerDown = useCallback(
-    (e: PointerEvent<HTMLElement>) => {
-      e.currentTarget.setPointerCapture(e.pointerId);
-      start.current = { x: e.clientX, y: e.clientY, ox: offset.x, oy: offset.y };
-      moved.current = false;
-      setDragging(true);
-    },
-    [offset],
-  );
+  function onPointerDown(e: PointerEvent<HTMLElement>) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    start.current = { x: e.clientX, y: e.clientY, ox: offset.x, oy: offset.y };
+    moved.current = false;
+    setDragging(true);
+  }
 
-  const onPointerMove = useCallback(
-    (e: PointerEvent<HTMLElement>) => {
-      if (!dragging) return;
-      const dx = e.clientX - start.current.x;
-      const dy = e.clientY - start.current.y;
-      if (Math.abs(dx) + Math.abs(dy) > 4) moved.current = true;
-      setOffset({ x: start.current.ox + dx, y: start.current.oy + dy });
-    },
-    [dragging],
-  );
+  function onPointerMove(e: PointerEvent<HTMLElement>) {
+    if (!dragging) return;
+    const dx = e.clientX - start.current.x;
+    const dy = e.clientY - start.current.y;
+    if (Math.abs(dx) + Math.abs(dy) > 4) moved.current = true;
+    setOffset({ x: start.current.ox + dx, y: start.current.oy + dy });
+  }
 
-  const onPointerUp = useCallback(() => setDragging(false), []);
+  const onPointerUp = () => setDragging(false);
 
-  const onClickCapture = useCallback((e: { preventDefault: () => void; stopPropagation: () => void }) => {
-    if (moved.current) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  }, []);
+  // SE ARRASTOU, O CLIQUE NO FINAL NÃO CONTA
+  function onClickCapture(e: { preventDefault: () => void; stopPropagation: () => void }) {
+    if (!moved.current) return;
+    e.preventDefault();
+    e.stopPropagation();
+  }
 
   return {
     dragging,

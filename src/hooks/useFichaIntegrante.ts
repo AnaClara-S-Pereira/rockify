@@ -1,9 +1,9 @@
-import { dropSimilar, yearFrom } from "../utilitarios/texto";
+import { dropSimilar, lastName, yearFrom } from "../utilitarios/texto";
 import { ageAt, formatDate, isMbid, normalize } from "../utilitarios/utilidades";
 import { childhoodItems, completeBiography, curiosityItems, getBandMentions, getBiography, getControversies, profileOf, type PersonContext } from "../servicos/dossie";
 import { getArtist } from "../servicos/musicbrainz";
 import { getPress, getSearchPhotos } from "../servicos/imprensa";
-import { findWikiPage, getCommonsPhotos, getWikiImages, isPortrait, type WikiPage } from "../servicos/wikipedia";
+import { findWikiPages, getCommonsPhotos, getWikiImages, isPortrait, pagesFrom, type WikiPage } from "../servicos/wikipedia";
 import { getPersonFacts } from "../servicos/wikidata";
 import type { Member, DossieIntegrante, WikiImage, WikiPerson } from "../tipos";
 import { useAssincrono } from "./useAssincrono";
@@ -33,12 +33,9 @@ export function useFichaIntegrante({ member, person, dossier, band, solo, bandPa
   // PÁGINAS DA WIKIPEDIA: AS DO WIKIDATA; SEM ELAS, PROCURA PELO NOME (E PELOS APELIDOS DO MUSICBRAINZ) CONFERINDO SE CITAM A BANDA
   const pagesQ = useAssincrono(async (): Promise<WikiPage[]> => {
     if (waiting) return [];
-    const titles = person?.titles;
-    if (titles?.pt || titles?.en) {
-      return [titles.pt && { lang: "pt" as const, title: titles.pt }, titles.en && { lang: "en" as const, title: titles.en }].filter((p): p is WikiPage => !!p);
-    }
-    const search = (names: string[]) =>
-      Promise.all([findWikiPage(names, band, ["pt"], band), findWikiPage(names, band, ["en"], band)]).then((r) => r.filter((p): p is WikiPage => !!p));
+    const fromWikidata = pagesFrom(person?.titles);
+    if (fromWikidata.length > 0) return fromWikidata;
+    const search = (names: string[]) => findWikiPages(names, band, band);
     const byName = await search([member.name]);
     if (byName.length) return byName;
     const aliases = isMbid(member.id) ? ((await getArtist(member.id).catch(() => undefined))?.aliases ?? []) : [];
@@ -78,7 +75,7 @@ export function useFichaIntegrante({ member, person, dossier, band, solo, bandPa
 
   const introYear = yearFrom((wikiQ.data?.[0]?.paragraphs[0] ?? "").slice(0, 250));
   const born = profile.birth ? Number(profile.birth.slice(0, 4)) : introYear;
-  const surname = normalize(member.name.trim().split(/\s+/).pop() ?? member.name);
+  const surname = lastName(member.name);
   const ageInPhoto = (img: WikiImage) => (born && img.year ? img.year - born : undefined);
 
   // A FOTO É DA PESSOA SE VEIO DO ITEM/CATEGORIA DELA OU SE O NOME DO ARQUIVO TEM O SOBRENOME OU A LEGENDA COMEÇA COM O NOME (E NÃO SÓ CITA ELE)
@@ -128,7 +125,7 @@ export function useFichaIntegrante({ member, person, dossier, band, solo, bandPa
   const comings = [
     !member.current && !solo && `Deixou o ${band} (${member.periods.join(", ")}).`,
     member.periods.length > 1 && !solo && `Entrou, saiu e voltou ao ${band}: ${member.periods.join(", ")}.`,
-  ].filter((t): t is string => !!t);
+  ].filter((t) => typeof t === "string");
   const controversies = found.length > 0 || dirtLoading ? found : comings;
 
   const age = ageAt(profile.birth, profile.death);

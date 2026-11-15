@@ -1,4 +1,4 @@
-import { throttledJson as getJson } from "../utilitarios/requisicoes";
+import { throttledJson } from "../utilitarios/requisicoes";
 import { yearFrom } from "../utilitarios/texto";
 import { isMbid } from "../utilitarios/utilidades";
 import type { Member, PersonFacts, WikiPerson } from "../tipos";
@@ -18,7 +18,7 @@ interface Entity {
 }
 
 function wikidata<T>(params: Record<string, string>): Promise<T> {
-  return getJson<T>(`https://www.wikidata.org/w/api.php?${new URLSearchParams({ format: "json", origin: "*", ...params })}`);
+  return throttledJson<T>(`https://www.wikidata.org/w/api.php?${new URLSearchParams({ format: "json", origin: "*", ...params })}`);
 }
 
 const isQid = (key: string) => /^Q\d+$/.test(key);

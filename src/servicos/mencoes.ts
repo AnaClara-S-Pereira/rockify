@@ -1,4 +1,4 @@
-import { throttledJson as getJson } from "../utilitarios/requisicoes";
+import { throttledJson } from "../utilitarios/requisicoes";
 import { lastName, plain, sentences } from "../utilitarios/texto";
 import { normalize } from "../utilitarios/utilidades";
 import { CONTROVERSY_WORDS } from "../utilitarios/palavras";
@@ -11,7 +11,7 @@ export async function searchMentions(lang: Lang, name: string, band: string): Pr
       ? "preso OR polêmica OR escândalo OR processado OR overdose OR acusado OR expulso OR agressão OR censurado"
       : "arrested OR controversy OR scandal OR lawsuit OR overdose OR accused OR assault OR banned OR fired";
   try {
-    const data = await getJson<{ query?: { search: { snippet: string }[] } }>(
+    const data = await throttledJson<{ query?: { search: { snippet: string }[] } }>(
       wikiApi(lang, { action: "query", list: "search", srsearch: `"${name}" "${band}" (${terms})`, srlimit: "10", srprop: "snippet" }),
     );
     const surname = lastName(name);

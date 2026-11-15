@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { PlayableTrack } from "../tipos";
 
 interface PlayerValue {
@@ -50,56 +50,53 @@ export function ProvedorPlayer({ children }: { children: ReactNode }) {
     el.play().catch(() => setPlaying(false));
   }, [current]);
 
+  // QUANDO A FAIXA ACABA, VAI PRA PRÓXIMA ATÉ O FIM DA FILA
   useEffect(() => {
     const el = audio.current;
     if (!el) return;
-    const onEnd = () => setIndex((i) => (i + 1 < queue.length ? i + 1 : i));
+    const onEnd = () => setIndex((i) => Math.min(i + 1, queue.length - 1));
     el.addEventListener("ended", onEnd);
     return () => el.removeEventListener("ended", onEnd);
   }, [queue.length]);
 
-  const play = useCallback(
-    (track: PlayableTrack, list?: PlayableTrack[]) => {
-      if (current?.id === track.id) {
-        const el = audio.current;
-        if (el?.paused) el.play();
-        else el?.pause();
-        return;
-      }
-      const nextQueue = list && list.some((t) => t.id === track.id) ? list : [track];
-      setQueue(nextQueue);
-      setIndex(nextQueue.findIndex((t) => t.id === track.id));
-    },
-    [current],
-  );
-
-  const toggle = useCallback(() => {
+  function pausarOuTocar() {
     const el = audio.current;
-    if (!el || !current) return;
-    if (el.paused) el.play();
-    else el.pause();
-  }, [current]);
+    if (el?.paused) el.play();
+    else el?.pause();
+  }
 
-  const next = useCallback(() => setIndex((i) => Math.min(i + 1, queue.length - 1)), [queue.length]);
-  const prev = useCallback(() => setIndex((i) => Math.max(i - 1, 0)), []);
+  function play(track: PlayableTrack, list?: PlayableTrack[]) {
+    if (current?.id === track.id) return pausarOuTocar();
+    const newQueue = list?.some((t) => t.id === track.id) ? list : [track];
+    setQueue(newQueue);
+    setIndex(newQueue.findIndex((t) => t.id === track.id));
+  }
 
-  const seek = useCallback((ratio: number) => {
+  function toggle() {
+    if (current) pausarOuTocar();
+  }
+
+  function next() {
+    setIndex((i) => Math.min(i + 1, queue.length - 1));
+  }
+
+  function prev() {
+    setIndex((i) => Math.max(i - 1, 0));
+  }
+
+  function seek(ratio: number) {
     const el = audio.current;
     if (el?.duration) el.currentTime = ratio * el.duration;
-  }, []);
+  }
 
-  const close = useCallback(() => {
+  function close() {
     audio.current?.pause();
     setQueue([]);
     setIndex(-1);
     setProgress(0);
-  }, []);
+  }
 
-  return (
-    <PlayerContext.Provider value={{ current, playing, progress, play, toggle, next, prev, seek, close }}>
-      {children}
-    </PlayerContext.Provider>
-  );
+  return <PlayerContext.Provider value={{ current, playing, progress, play, toggle, next, prev, seek, close }}>{children}</PlayerContext.Provider>;
 }
 
 export function usePlayer(): PlayerValue {

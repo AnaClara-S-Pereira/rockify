@@ -28,11 +28,12 @@ export function getJson<T>(url: string): Promise<T> {
   if (pending.has(url)) return pending.get(url) as Promise<T>;
 
   const run = (async () => {
-    let res = await fetch(url, { headers: { Accept: "application/json" } });
+    const pedir = () => fetch(url, { headers: { Accept: "application/json" } });
+    let res = await pedir();
     // LIMITE DE REQUISIÇÕES (429 OU 503 DO MUSICBRAINZ): ESPERA UM POUCO E TENTA DE NOVO
     for (let tries = 0; (res.status === 429 || res.status === 503) && tries < 3; tries++) {
       await new Promise((r) => setTimeout(r, (Number(res.headers.get("retry-after")) || 3) * 1000));
-      res = await fetch(url, { headers: { Accept: "application/json" } });
+      res = await pedir();
     }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = (await res.json()) as T;
